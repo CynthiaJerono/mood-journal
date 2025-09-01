@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero">
+    <div class="hero-content">
+        <h2>Track Your Mood, Improve Your Well-being</h2>
+        <p>An AI-powered journal that helps you understand your emotional patterns</p>
+        <div class="cta-buttons">
+            <a href="{{ url_for('register') }}" class="btn btn-primary">Get Started</a>
+            <a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a>
+        </div>
+    </div>
+</div>
+
+<div class="features">
+    <div class="feature">
+        <h3>AI Mood Analysis</h3>
+        <p>Our advanced AI analyzes your journal entries to identify your emotional state</p>
+    </div>
+    <div class="feature">
+        <h3>Trend Visualization</h3>
+        <p>See how your mood changes over time with interactive charts</p>
+    </div>
+    <div class="feature">
+        <h3>Mental Health Support</h3>
+        <p>Get alerts and resources when we detect persistent low moods</p>
+    </div>
+</div>
+{% endblock %}

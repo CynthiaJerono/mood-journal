@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Your Mood Dashboard</h2>
+
+<div class="dashboard-grid">
+    <div class="journal-entry">
+        <h3>How are you feeling today?</h3>
+        <form id="journalForm">
+            <textarea name="content" placeholder="Write about your day, your feelings, anything on your mind..." required></textarea>
+            <button type="submit" class="btn btn-primary">Save Entry & Analyze Mood</button>
+        </form>
+        <div id="moodResult" class="mood-result"></div>
+    </div>
+
+    <div class="mood-chart">
+        <h3>Your Mood Trends (Last 7 Days)</h3>
+        <canvas id="moodChart"></canvas>
+    </div>
+</div>
+
+<div class="recent-entries">
+    <h3>Recent Entries</h3>
+    {% if entries %}
+        <div class="entries-list">
+            {% for entry in entries %}
+                <div class="entry-card">
+                    <div class="entry-date">{{ entry.created_at.strftime('%B %d, %Y') }}</div>
+                    <div class="entry-content">{{ entry.content }}</div>
+                    <div class="entry-mood">
+                        <span class="mood-label {{ entry.mood_label }}">{{ entry.mood_label }}</span>
+                        <span class="mood-score">({{ "%.2f"|format(entry.mood_score * 100) }}%)</span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No entries yet. Start by writing about your day!</p>
+    {% endif %}
+</div>
+
+<script>
+    // Chart initialization
+    const ctx = document.getElementById('moodChart').getContext('2d');
+    const moodChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ dates | safe }},
+            datasets: [{
+                label: 'Mood Score',
+                data: {{ scores | safe }},
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1,
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    min: 0,
+                    max: 1
+                }
+            }
+        }
+    });
+
+    // Form submission
+    document.getElementById('journalForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        
+        try {
+            const response = await fetch('/add_entry', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.getElementById('moodResult').innerHTML = `
+                    <div class="mood-feedback ${result.mood_label}">
+                        <h4>Your current mood: ${result.mood_label}</h4>
+                        <p>Confidence: ${(result.mood_score * 100).toFixed(2)}%</p>
+                    </div>
+                `;
+                
+                // Reload the page to update the chart and entries list
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                document.getElementById('moodResult').innerHTML = `
+                    <div class="error">Error: ${result.error}</div>
+                `;
+            }
+        } catch (error) {
+            document.getElementById('moodResult').innerHTML = `
+                <div class="error">Network error. Please try again.</div>
+            `;
+        }
+    });
+</script>
+{% endblock %}
